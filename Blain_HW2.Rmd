@@ -1,0 +1,6 @@
+---
+title: "Homework #2"
+author: "Blain Morin"
+date: "March 1, 2018"
+output: html_document
+---
