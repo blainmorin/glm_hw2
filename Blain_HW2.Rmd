@@ -2,5 +2,284 @@
 title: "Homework #2"
 author: "Blain Morin"
 date: "March 1, 2018"
-output: html_document
+output: 
+  html_document:
+    df_print: paged
+    theme: journal
 ---
+```{r, echo=FALSE, results='hide', include=FALSE}
+
+library(tidyverse)
+library(gridExtra)
+library(readr)
+library(sjPlot)
+library(knitr)
+Wine = read_csv("Wine.csv")
+attach(Wine)
+```
+
+#Question 1: Wine
+
+####a. Plot mortality vs. wine; log mortality vs. wine, mortality vs. log wine and log mortality vs. log wine. Which one looks more linear?
+
+```{r, echo=FALSE}
+
+nolog = ggplot(data = Wine) + geom_point(aes(x = WINE, y = MORTALITY), color = "red")  
+
+logwine = ggplot(data = Wine) + geom_point(aes(x = log(WINE), y = MORTALITY), color = "purple") 
+
+logmortality = ggplot(data = Wine) + geom_point(aes(x = WINE, y = log(MORTALITY)), color = "blue") 
+
+logboth = ggplot(data = Wine) + geom_point(aes(x = log(WINE), y = log(MORTALITY)), color = "green") 
+
+grid.arrange(nolog, logwine, logmortality, logboth, nrow = 2, top = "Figure 1")
+
+
+```
+
+In figure 1, the green plot looks the most linear. This is the plot where both wine consumption and heart disease mortality rates are log transformed. 
+
+
+####b. Fit four linear regression models corresponding to the four plots and report the regression equation and R-squared. Which model do you think is best?
+
+```{r, echo = FALSE, results = "hide", message = FALSE}
+
+lm_nolog = lm(MORTALITY~WINE)
+lm_logwine =lm(MORTALITY~log(WINE))
+lm_logmortality = lm(log(MORTALITY)~WINE)
+lm_logboth = lm(log(MORTALITY)~log(WINE))
+
+lmlist = list(lm_nolog, lm_logwine, lm_logmortality, lm_logboth)
+
+lm_table = sjt.lm(lmlist, 
+                  show.header = FALSE, 
+                  depvar.labels = c("Model 1: Mortality", "Model 2: Mortality", "Model 3: log(Mortality)", "Model 4:     log(mortality)"),
+                  no.output = TRUE)
+
+```
+
+```{r, echo = FALSE}
+
+lm_table
+
+```
+
+The above table confirms that the model with log wine consumption and log heart disease mortality rate has the best fit. It has the highest R squared and adjusted R squared, with values .738 / .722 respectively. 
+
+####c. Interpret each regression model by describing the change in mortality for a given change in the predictor. Use an increase of 10 units of wine consumption for linear wine and a doubling of wine consumption for logarithmic wine.
+
+Using the model names from the table in part (b):
+
+Model 1: An increase of 10 units of wine consumption is associated with a .8 decrease in the heart disease mortality rates.
+
+Model 2: A doubling of wine consumption is associated with a 1.22 decrease in heart disease mortality rate. 
+
+Model 3: An increase of 10 units of wine consumption is associated with a 2 percent decrease in heart disease mortality rate.
+
+Model 4: A doubling of wine consumption is associated with a 36 percent decrease in heart disease mortality rate. 
+
+#Question 2: Election
+
+####a.The data in File Bush.xls contain the numbers of votes for Buchanan and Bush in all 67 counties in Florida. What evidence is there in the scatterplot of Display 8.25 that Buchanan received more votes than expected in Palm Beach County? Analyze the data without Palm Beach County results to obtain an equation for predicting Buchanan votes from Bush votes. Obtain a 95% prediction interval for the number of Buchanan votes in Palm Beach from this result-assuming the relationship is the same in this county as in the others. If it is assumed that Buchanan's actual count contains a number of votes intended for Gore, what can be said about the likely size of this number from the prediction interval? (Consider transformation.)
+
+```{r, echo = FALSE, results="hide", message=FALSE}
+
+Bush <- read_csv("Bush.csv")
+
+```
+
+
+#####a1. What evidence is there in the scatterplot of Display 8.25 that Buchanan received more votes than expected in Palm Beach County?
+
+From the 8.25 scatter plot, it appears that Palm Beach County has an unusually high number of Buchanan votes as compared to the other counties with a similar number of bush votes. 
+
+#####a2. Analyze the data without Palm Beach County results to obtain an equation for predicting Buchanan votes from Bush votes. Obtain a 95% prediction interval for the number of Buchanan votes in Palm Beach from this result-assuming the relationship is the same in this county as in the others.
+
+```{r}
+
+### Remove palm beach from the Bush data set
+nopalm = Bush %>%
+  filter(county != "PALM BEACH")
+
+### Run a linear regression on the filtered data
+palmmodel = lm(buchanan2000 ~ bush2000, data = nopalm)
+
+### Predict the number of votes for Buchanan when the number of Bush votes = 152846
+predict(palmmodel, data.frame(bush2000 = 152846), interval = "predict")
+
+```
+
+Our predicted number of votes for Buchanan based on the number of votes for Bush in Palm county is 597.8 with a 95% confidence interval of [364.7 , 830.8]. 
+
+#####a3. If it is assumed that Buchanan's actual count contains a number of votes intended for Gore, what can be said about the likely size of this number from the prediction interval? (Consider transformation.)
+
+This needs to be answered. 
+
+####b. One might suspect that the prediction interval can be narrowed and the validity of the procedure strength¬ened by incorporating other relevant predictor variables. The dataset gives the vote counts by county in Florida for Buchanan and for four other presidential candidates in 2000, along with the total vote counts in 2000, the presidential vote counts for three presidential candidates in 1996, the vote count for Buchanan in his only other campaign in Florida¬, the 1996 Republican primary, the registration in Buchanan's Reform party, and the total political party registration in the county.
+
+#### Analyze the data in Ex1222 and write a statistical summary predicting the number of Buchanan, votes in Palm Beach Country that were not intended for him. It would be appropriate to describe any unverifiable assumptions used in applying the prediction equation for this purpose. (Suggestion: Find a model for predicting Buchanan's 2000 vote from other variables, excluding Palm Beach County, which is listed last in the data set. Consider a transformation of all counts.)
+
+```{r, echo = FALSE}
+attach(nopalm)
+```
+
+```{r}
+
+### Run linear model with other variables in Bush dataset
+bmodel = lm(buchanan2000 ~ gore2000 +
+              nader2000 +
+              browne2000 +
+              total2000 +
+              clinton96 +
+              dole96 +
+              perot96 +
+              buchanan96p +
+              reform.reg +
+              total.reg)
+
+###Predict the number of votes for Palm County
+predict(bmodel, data.frame(Bush[67,]), interval = "predict")
+
+```
+
+```{r, echo = FALSE}
+
+detach(nopalm)
+
+```
+
+#Question 3: Blood Brain Experiment
+
+```{r, echo = FALSE, message= FALSE}
+
+BloodBrain <- read_csv("BloodBrain.csv")
+
+```
+
+####a.	Compute "Jittered" versions of-treatment, days after inoculation, and an indicator variable for females by adding small random numbers to each (uniform random numbers between -.15 and .15 work well). Or you could use the jitter function.
+
+```{r}
+
+###Add jitter to columns
+jitterbrain = BloodBrain
+jitterbrain$DAYS = jitter(jitterbrain$DAYS)
+jitterbrain$TREAT = jitter(as.numeric(as.factor(jitterbrain$TREAT)))
+jitterbrain$SEX = jitter(as.numeric(as.factor(jitterbrain$SEX)))
+
+```
+
+####b. Obtain a matrix of scatter plots for the following variables: log sacrifice time, treatment (jittered), days after inoculation (jittered), sex (jittered), and the log of the brain tumor-to-liver antibody ratio. Use the function pairs in the graphics package or scatterplotMatrix in the car package.
+
+```{r}
+
+pairs(data = jitterbrain, ~log(TIME) + TREAT + DAYS + SEX + log(BRAIN/LIVER))
+
+```
+
+
+####c. Obtain a matrix of the correlation coefficients among the same five variables (not jittered).
+
+```{r}
+
+### Set up dataframe for the correlation matrix
+braincordata = BloodBrain %>%
+  select(TIME, TREAT, DAYS, SEX, BRAIN, LIVER)
+braincordata = braincordata %>%
+  mutate(RATIO = BRAIN/LIVER)
+braincordata = braincordata %>%
+  select(-BRAIN, - LIVER)
+braincordata$TIME = log(braincordata$TIME)
+braincordata$RATIO = log(braincordata$RATIO)
+braincordata$TREAT = as.numeric(as.factor(braincordata$TREAT))
+braincordata$SEX = as.numeric(as.factor(braincordata$SEX))
+
+### Command for computing the correlation matrix
+cor(braincordata)
+
+```
+
+In the above correlation matrix:
+  - TIME = log(TIME)
+  - RATIO = log(RATIO)
+
+####d.	On the basis of this, what can be said about the relationship between the covariates (sex and days after inoculation), the response, and the design variables (treatment and sacrifice time).
+
+We can see from the correlation matrix above that sex and the log ratio has a moderately weak correlation. Days after inoculation and the log Ratio have a weak correlation. The treatment group has a very weak and slightly negative correlation with the log Ratio. Lastly, the sacrifice time has a very strong positive correlation with the response log ratio.
+
+####e.	Fit the regression of the log response (brain tumor-to-liver antibody ratio) on an indicator variable for treatment and on sacrifice time treated as a factor with four levels (include three indicator variables, for sacrifice time == 3, 24, and 72 hours). Use the model to find the estimated mean of the log response at each of the eight treatment combinations (all combinations of the two infusions and the four sacrifice times).
+
+```{r}
+
+### Run the linear model
+lm_part_e = lm(log(BRAIN / LIVER) ~ as.factor(TIME) + as.factor(TREAT), data = BloodBrain)
+
+### Create data frame with all combos
+the_treats = unique(as.factor(BloodBrain$TREAT))
+the_times = unique(as.factor(BloodBrain$TIME))
+combos = data.frame(TREAT = rep(the_treats, each =  4), TIME = rep(the_times, 2))
+
+### Estimate the mean for each of the 8 combinations
+predictions = predict(lm_part_e, combos)
+
+### Add these predictions to our combination table
+combos$MEAN = predictions
+
+### View Table
+kable(combos)
+
+```
+
+
+####f. Let X represent log of sacrifice time. Fit the regression of the log response on an indicator variable for treatment, X, X^2, and X^3. Use the estimated model to find the estimated mean of the log response at each of the eight treatment combinations.
+
+```{r}
+
+### Run the linear model
+lm_part_f = lm(log(BRAIN / LIVER) ~ as.factor(TREAT) + log(TIME) + log(TIME)^2 + log(TIME)^3, data = BloodBrain)
+
+### Create data frame with all combos
+the_treatsf = unique(as.factor(BloodBrain$TREAT))
+the_timesf = unique(BloodBrain$TIME)
+combosf = data.frame(TREAT = rep(the_treatsf, each =  4), TIME = rep(the_timesf, 2))
+
+predictionsf = predict(lm_part_f, combosf)
+
+combosf$MEAN = predictionsf
+
+kable(combosf)
+
+```
+
+####g. Why are the answers to parts (5) and (6) the same?
+
+Need to answer this.
+
+####h. Fit the regression of the log response (brain tumor-to-liver antibody ratio) on all covariates, the treatment indicator, and sacrifice time, treated as a factor with four levels (include three indicator variables, for sacrifice time == 3, 24, and 72 hours).
+
+```{r}
+
+###Run the linear model
+lm_part_h = lm(log(BRAIN / LIVER) ~ as.factor(TREAT) + as.factor(TIME) + DAYS + SEX + WEIGHT + LOSS + TUMOR)
+
+###Summarize the model
+summary(lm_part_h)
+
+```
+
+####i. Obtain a set of case influence statistics, including a measure of influence, the leverage, and the studentized residua1.
+
+```{r}
+
+inf_measures = influence.measures(lm_part_h)
+
+plot(lm_part_h)
+
+```
+
+
+####j. Discuss whether any influential observations or outliers occur with respect to this fit.
+
+Need to answer this
+
+#Question 4: 
+
