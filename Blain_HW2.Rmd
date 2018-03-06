@@ -64,7 +64,7 @@ lm_table
 
 ```
 
-The above table confirms that the model with log wine consumption and log heart disease mortality rate has the best fit. It has the highest R squared and adjusted R squared, with values .738 / .722 respectively. 
+The above table confirms that the model with log wine consumption and log heart disease mortality rate has the best fit. It has the highest R squared and adjusted R squared, with values .738 / .722 respectively. Therefore, I would say model 4 is the best. 
 
 ####c. Interpret each regression model by describing the change in mortality for a given change in the predictor. Use an increase of 10 units of wine consumption for linear wine and a doubling of wine consumption for logarithmic wine.
 
@@ -72,11 +72,11 @@ Using the model names from the table in part (b):
 
 Model 1: An increase of 10 units of wine consumption is associated with a .8 decrease in the heart disease mortality rates.
 
-Model 2: A doubling of wine consumption is associated with a 1.22 decrease in heart disease mortality rate. 
+Model 2: A doubling of wine consumption is associated with a 1.22 decrease in heart disease mortality rate. (-1.77*log(2) = -1.22)
 
-Model 3: An increase of 10 units of wine consumption is associated with a 2 percent decrease in heart disease mortality rate.
+Model 3: An increase of 10 units of wine consumption is associated with an 18 percent decrease in heart disease mortality rate. (exp(-.02) = .82, meaning that heart disease mortality is at .82 of its original value.)
 
-Model 4: A doubling of wine consumption is associated with a 36 percent decrease in heart disease mortality rate. 
+Model 4: A doubling of wine consumption is associated with a 22 percent decrease in heart disease mortality rate. (2^-.36 = .78, meaning that heart disease is at 78 percent of its original value)
 
 #Question 2: Election
 
