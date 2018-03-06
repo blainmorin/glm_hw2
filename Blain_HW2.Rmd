@@ -259,7 +259,7 @@ Need to answer this.
 ```{r}
 
 ###Run the linear model
-lm_part_h = lm(log(BRAIN / LIVER) ~ as.factor(TREAT) + as.factor(TIME) + DAYS + SEX + WEIGHT + LOSS + TUMOR)
+lm_part_h = lm(log(BRAIN / LIVER) ~ as.factor(TREAT) + as.factor(TIME) + DAYS + SEX + WEIGHT + LOSS + TUMOR, data = BloodBrain)
 
 ###Summarize the model
 summary(lm_part_h)
