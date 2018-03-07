@@ -266,7 +266,7 @@ jitterbrain$SEX = jitter(as.numeric(as.factor(jitterbrain$SEX)))
 
 ```{r}
 
-pairs(data = jitterbrain, ~log(TIME) + TREAT + DAYS + SEX + log(BRAIN/LIVER))
+pairs(data = jitterbrain, ~ log(BRAIN/LIVER) + log(TIME) + TREAT + DAYS + SEX )
 
 ```
 
@@ -316,7 +316,7 @@ combos = data.frame(TREAT = rep(the_treats, each =  4), TIME = rep(the_times, 2)
 predictions = predict(lm_part_e, combos)
 
 ### Add these predictions to our combination table
-combos$MEAN = predictions
+combos$logMEAN = predictions
 
 ### View Table
 kable(combos)
@@ -328,17 +328,26 @@ kable(combos)
 
 ```{r}
 
+BloodBrain$LTIME2 = log(BloodBrain$TIME)^2
+BloodBrain$LTIME3 = log(BloodBrain$TIME)^3
+
 ### Run the linear model
-lm_part_f = lm(log(BRAIN / LIVER) ~ as.factor(TREAT) + log(TIME) + log(TIME)^2 + log(TIME)^3, data = BloodBrain)
+lm_part_f = lm( log(BRAIN / LIVER) ~ as.factor(TREAT) + log(TIME) + LTIME2 + LTIME3, data = BloodBrain)
+
+summary(lm_part_f)
+
 
 ### Create data frame with all combos
 the_treatsf = unique(as.factor(BloodBrain$TREAT))
-the_timesf = unique(BloodBrain$TIME)
-combosf = data.frame(TREAT = rep(the_treatsf, each =  4), TIME = rep(the_timesf, 2))
+the_timesf = unique(log(BloodBrain$TIME))
+the_timesf2 = unique(BloodBrain$LTIME2)
+the_timesf3 = unique(BloodBrain$LTIME3)
+combosf = data.frame(TREAT = rep(the_treatsf, each =  4), TIME = rep(the_timesf, 2), LTIME2 = rep(the_timesf2, 2),
+                     LTIME3 = rep(the_timesf3, 2))
 
 predictionsf = predict(lm_part_f, combosf)
 
-combosf$MEAN = predictionsf
+combosf$logMEAN = predictions
 
 kable(combosf)
 
@@ -346,7 +355,7 @@ kable(combosf)
 
 ####g. Why are the answers to parts (5) and (6) the same?
 
-Need to answer this.
+The results are the same because time is effectively turned into a factor when it is included in the regression in part 6 three times. Since the times are split in a way that effectively makes them categorical, their beta coefficient is the mean between the different categories. 
 
 ####h. Fit the regression of the log response (brain tumor-to-liver antibody ratio) on all covariates, the treatment indicator, and sacrifice time, treated as a factor with four levels (include three indicator variables, for sacrifice time == 3, 24, and 72 hours).
 
