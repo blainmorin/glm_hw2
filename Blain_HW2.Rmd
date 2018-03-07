@@ -113,20 +113,20 @@ Our predicted number of votes for Buchanan based on the number of votes for Bush
 
 #####a3. If it is assumed that Buchanan's actual count contains a number of votes intended for Gore, what can be said about the likely size of this number from the prediction interval? (Consider transformation.)
 
-This needs to be answered. 
+Although our predicted number of votes for Buchanan based on the number of votes for George Bush was 598, the actual number was 3407. So there is evidence to suggest that the interval [3407-830.8 , 3407-364.7] = [ 2576.2, 3042.3]  contains the amount of Buchanan votes that were actually intended for Gore. 
 
 ####b. One might suspect that the prediction interval can be narrowed and the validity of the procedure strength¬ened by incorporating other relevant predictor variables. The dataset gives the vote counts by county in Florida for Buchanan and for four other presidential candidates in 2000, along with the total vote counts in 2000, the presidential vote counts for three presidential candidates in 1996, the vote count for Buchanan in his only other campaign in Florida¬, the 1996 Republican primary, the registration in Buchanan's Reform party, and the total political party registration in the county.
 
 #### Analyze the data in Ex1222 and write a statistical summary predicting the number of Buchanan, votes in Palm Beach Country that were not intended for him. It would be appropriate to describe any unverifiable assumptions used in applying the prediction equation for this purpose. (Suggestion: Find a model for predicting Buchanan's 2000 vote from other variables, excluding Palm Beach County, which is listed last in the data set. Consider a transformation of all counts.)
 
-```{r, echo = FALSE}
-attach(nopalm)
-```
+
+Here is the model with all of the other variables included:
 
 ```{r}
 
 ### Run linear model with other variables in Bush dataset
-bmodel = lm(buchanan2000 ~ gore2000 +
+bmodel = lm(buchanan2000 ~
+              gore2000 +
               nader2000 +
               browne2000 +
               total2000 +
@@ -135,18 +135,112 @@ bmodel = lm(buchanan2000 ~ gore2000 +
               perot96 +
               buchanan96p +
               reform.reg +
-              total.reg)
+              total.reg, data = nopalm)
 
-###Predict the number of votes for Palm County
+### Summary of model
+summary(bmodel)
+
+### Predict the number of votes for Palm County
 predict(bmodel, data.frame(Bush[67,]), interval = "predict")
 
 ```
 
-```{r, echo = FALSE}
+Let's examine the independent variables of the above model to see if they appear linear:
 
-detach(nopalm)
+```{r}
+
+pairs(~buchanan2000 +
+              gore2000 +
+              nader2000 +
+              browne2000 +
+              total2000 +
+              clinton96 +
+              dole96 +
+              perot96 +
+              buchanan96p +
+              reform.reg +
+              total.reg, 
+              data = nopalm)
 
 ```
+
+We can see from the top row of the pairs plot that the is a positive correlation between the number of votes for Buchanan and the rest of the variables. However, most of the plots show heterskedasticity: the variance in the y values at the high x values seems higher than the variance at the low x values. Let's see if we can fix this using log transformations of all the variables:
+
+```{r, warning=FALSE}
+###replace 0 with .0001
+nopalm$reform.reg = nopalm$reform.reg+.0001
+```
+
+```{r}
+
+pairs(~buchanan2000 +
+              gore2000 +
+              nader2000 +
+              browne2000 +
+              total2000 +
+              clinton96 +
+              dole96 +
+              perot96 +
+              buchanan96p +
+              reform.reg +
+              total.reg,
+              log = "xy",
+              data = nopalm)
+
+```
+
+The linearity of the logged variables is considerably stronger than the untransformed case. 
+
+Let's run a linear model using the logged variables:
+
+```{r}
+
+
+bmodel2 = lm(log(buchanan2000) ~
+              log(gore2000) +
+              log(nader2000) +
+              log(browne2000) +
+              log(total2000) +
+              log(clinton96) +
+              log(dole96) +
+              log(perot96) +
+              log(buchanan96p) +
+              log(reform.reg) +
+              log(total.reg), 
+              data = nopalm)
+
+summary(bmodel2)
+
+```
+
+Using this log model let's predict the number of votes for Buchanan for Palm Beach county:
+
+```{r}
+
+### Log all the values in the Bush dataframe
+loggedbush = Bush
+loggedbush$reform.reg = loggedbush$reform.reg + .0001
+cols = names(loggedbush)
+cols = cols[2:length(cols)]
+loggedbush[cols] <- log(loggedbush[cols])
+
+predict(bmodel2, data.frame(loggedbush[67,]), interval = "predict")
+
+
+```
+
+This predicted interval for the log tranformed model means that we would expect the number of Buchanan votes to be 2.2% less than the mean number of Buchanan votes. 
+
+Thus the expected number of votes for Palm County in this model would be:
+
+```{r}
+
+mean(Bush$buchanan2000) * (1-.022)
+
+```
+
+Since our observed count was 3407, there is some plausibility in thinking that there were some votes cast for Buchanan that were meant for Gore, maybe even around 3154 (which would have swayed the election).
+
 
 #Question 3: Blood Brain Experiment
 
