@@ -14,6 +14,7 @@ library(gridExtra)
 library(readr)
 library(sjPlot)
 library(knitr)
+library(car)
 Wine = read_csv("Wine.csv")
 attach(Wine)
 ```
@@ -373,16 +374,30 @@ summary(lm_part_h)
 
 ```{r}
 
-inf_measures = influence.measures(lm_part_h)
+inf_measures = as.data.frame(influence.measures(lm_part_h)[[1]])
+
+```
+
+
+```{r, fig.width=12}
+
+ggplot(stack(inf_measures), aes(x = ind, y = values)) +
+  geom_boxplot() + ggtitle("Influence Measures") +
+  theme_minimal()
+
+```
+
+```{r, echo = FALSE}
 
 plot(lm_part_h)
 
 ```
 
-
 ####j. Discuss whether any influential observations or outliers occur with respect to this fit.
 
-Need to answer this
+We can see from the "Influence Measures" plot that there are points in each of the beta boxplots that change the beta value by more than half a standard deviation (especially at outlier points). Some points change the beta by over 2 standard deviations. Thus, there are certainly influential points in this fit. We also see that there are five points which change the fit of the model by over 1 standard deviation when removed from the model. We see from the cooks distance boxplot in "Influence Measures" that there are three points that are outliers. These are within 1 standard deviation of the mean distance, so they are weak leverage points. Overall, there are more influence points than there are leverage points in this model. 
+
+From the "Residuals vs Fitted" plot we can see that the residuals seem randomly scattered about the zero line. Thus there is no evidence of heteroskedisticity. 
 
 #Question 4: 
 
